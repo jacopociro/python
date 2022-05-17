@@ -39,10 +39,8 @@ def main(session):
     motion_service.rest()
 
 ##sistema per linkare a pepper
-
-ip = "130.251.13.117"
-#pepper 112
-#nao 116
+#ip = "192.168.1.100"
+ip = "130.251.13.143"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
