@@ -40,7 +40,7 @@ def main(session):
 
 ##sistema per linkare a pepper
 #ip = "192.168.1.100"
-ip = "130.251.13.143"
+ip = "130.251.13.117"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

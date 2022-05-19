@@ -6,13 +6,11 @@
 import qi
 import argparse
 import sys
-import time
-import vision_definitions
 import numpy as np
 import cv2
 import atexit
 
-    
+
 #ip = "192.168.1.100"
 ip = "130.251.13.117"
 def exit_handler():
@@ -21,51 +19,56 @@ def exit_handler():
     b = videoDevice.unsubscribe(captureDevice) 
     if a & b:
         print("proper exit")
-        
 
 def main(session):
     global ip, videoDevice, captureDevice
     #ip_address = "192.168.1.100"
     ip_address = ip
     port_num = 9559
-
-    videoDevice = session.service("ALVideoDevice")
+    #exit handler
     atexit.register(exit_handler)
-    # subscribe top camera
-    AL_kTopCamera = 0
-    AL_kQVGA = 1            # 320x240
-    AL_kBGRColorSpace = 13
-    captureDevice = videoDevice.subscribeCamera("test", AL_kTopCamera, AL_kQVGA, AL_kBGRColorSpace, 10)
-    print(captureDevice)
-    # create image
-    width = 320     
-    height = 240
-    image1 = np.zeros((height, width, 3), np.uint8)
-    image2 = np.zeros((height, width, 3), np.uint8)
+    #videoDevice = ALProxy('ALVideoDevice', ip_address, port_num)
+    videoDevice = session.service("ALVideoDevice")
+    # subscribe camera
+    # 0 = topcamera ; 1 = botcamera; 2 = depthcamera
+    # color space 13 or 11 for depthcamera
+    camera_idx = 2
+    resolution = 1           # 320x240
+    color_space = 11
+    captureDevice = videoDevice.subscribeCamera("test", camera_idx, resolution, color_space, 30)
+    
+    if captureDevice:
+        print ("[INFO] Camera is initialized")
+    else:
+        print("[INFO] Camera is not initialized")
+        videoDevice.unsubscribe(captureDevice) 
     while True:
-
-        # get image
-        image_raw = videoDevice.getImageRemote(captureDevice);
-        #print(image_raw)
+        image_raw = videoDevice.getImageRemote(captureDevice)
         if image_raw == None:
             print ('cannot capture.')
+            videoDevice.releaseImage(captureDevice)
+            break
         elif image_raw[6] == None:
             print ('no image data string.')
-        else:
-            image = np.frombuffer(image_raw[6], np.uint8).reshape(image_raw[1], image_raw[0], 3)
-            cv2.namedWindow("Camera1", cv2.WINDOW_NORMAL)
-            cv2.resizeWindow("Camera1", 540, 540)
-            cv2.namedWindow("Camera2", cv2.WINDOW_NORMAL)
-            cv2.resizeWindow("Camera2", 540, 540)
-            # show image
-            cv2.imshow("Camera1", image)
-            cv2.imshow("Camera2", image)
-        # exit by [ESC]
-        if cv2.waitKey(33) == 27: 
+            videoDevice.releaseImage(captureDevice)
             break
+        else:
+        #print(image_raw)
+            image = np.frombuffer(image_raw[6], np.uint8).reshape(image_raw[1], image_raw[0], 3)
+            cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("Camera", 1080, 1080)
+            cv2.imshow("Camera", image)
+            
+        if cv2.waitKey(33) == 27:
+            break
+
+
+            
+
     
 
 
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

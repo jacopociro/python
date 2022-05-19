@@ -11,24 +11,37 @@ import vision_definitions
 import numpy as np
 import cv2
 from naoqi import ALProxy
+import atexit
+
+def exit_handler():
+    global videoDevice, captureDevice
+    a = videoDevice.releaseImage(captureDevice)
+    b = videoDevice.unsubscribe(captureDevice) 
+    if a & b:
+        print("proper exit")
+    
 
 
+#ip = "192.168.1.100"
+ip = "130.251.13.117"
 def main(session):
+    global ip
+    global videoDevice, captureDevice
     #ip_address = "192.168.1.100"
-    ip_address = "130.251.13.143"
+    ip_address = ip
     port_num = 9559
     
     videoDevice = ALProxy('ALVideoDevice', ip_address, port_num)
 
     # subscribe top camera
-    # 0 = topcamera ; 1 = botcamera; 2 = depthcamera; 3 = HDcamera
+    # 0 = topcamera ; 1 = botcamera; 2 = depthcamera; 3 = Stereocamera
     AL_kTopCamera = 0
-    AL_kQVGA = 1            # 320x240
+    AL_kQVGA = 1           # 320x240
     AL_kBGRColorSpace = 13
-    captureDevice = videoDevice.subscribeCamera("test", AL_kTopCamera, AL_kQVGA, AL_kBGRColorSpace, 10)
+    captureDevice = videoDevice.subscribeCamera("test", AL_kTopCamera, AL_kQVGA, AL_kBGRColorSpace, 30)
     print(captureDevice)
     # create image
-    width = 320
+    width = 320 
     height = 240
     image = np.zeros((height, width, 3), np.uint8)
     while True:
@@ -54,15 +67,11 @@ def main(session):
 
             # show image
             cv2.imshow("pepper-top-camera-320x240", image)
-
+            atexit.register(exit_handler)
         # exit by [ESC]
-        if cv2.waitKey(33) == 27:
-            videoDevice.unsubscribe("test") 
-            break
+
 
     
-#ip = "192.168.1.100"
-ip = "130.251.13.143"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
